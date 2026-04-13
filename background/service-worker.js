@@ -26,7 +26,34 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     });
     return true;
   }
+
+  if (message.type === 'GET_FAVICON') {
+    fetchFaviconDataUrl(message.url).then(sendResponse);
+    return true;
+  }
 });
+
+async function fetchFaviconDataUrl(pageUrl) {
+  try {
+    const faviconUrl = chrome.runtime.getURL(
+      `_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=16`
+    );
+    const response = await fetch(faviconUrl);
+    if (!response.ok) return { dataUrl: null };
+
+    const blob = await response.blob();
+    // Service workers don't have FileReader; convert blob → base64 via ArrayBuffer
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8.length; i++) {
+      binary += String.fromCharCode(uint8[i]);
+    }
+    return { dataUrl: `data:${blob.type};base64,${btoa(binary)}` };
+  } catch {
+    return { dataUrl: null };
+  }
+}
 
 // ── Bookmark change listeners ────────────────────────────────────────────────
 

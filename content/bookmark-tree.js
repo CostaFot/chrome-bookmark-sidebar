@@ -110,13 +110,11 @@ function bmsRenderNode(node, query, settings, isTopLevel) {
   favicon.width = 16;
   favicon.height = 16;
   favicon.loading = 'lazy';
-  favicon.src = chrome.runtime.getURL(
-    `_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`
-  );
-  favicon.onerror = () => {
-    favicon.style.display = 'none';
-    a.classList.add('bms-no-favicon');
-  };
+  favicon.dataset.faviconUrl = node.url;
+  favicon.style.display = 'none'; // hidden until loaded by loadFavicons()
+
+  // Show emoji fallback while the real favicon loads
+  a.classList.add('bms-no-favicon');
 
   const title = document.createElement('span');
   title.className = 'bms-bookmark-title';
@@ -162,4 +160,50 @@ function renderBookmarkTree(tree, containerEl, query, settings) {
       if (el) containerEl.appendChild(el);
     }
   }
+}
+
+/**
+ * Fetches real favicons for all bookmark links in the container via the
+ * background service worker (which has extension context to access _favicon/).
+ * Results are cached in faviconCache (Map<url, dataUrl|null>) to avoid
+ * redundant fetches across re-renders.
+ * @param {HTMLElement} container
+ * @param {Map<string, string|null>} faviconCache
+ */
+async function loadFavicons(container, faviconCache) {
+  const imgs = Array.from(container.querySelectorAll('img.bms-favicon[data-favicon-url]'));
+  if (!imgs.length) return;
+
+  // Group img elements by URL so duplicate bookmarks share one fetch
+  const urlToImgs = new Map();
+  for (const img of imgs) {
+    const url = img.dataset.faviconUrl;
+    if (!urlToImgs.has(url)) urlToImgs.set(url, []);
+    urlToImgs.get(url).push(img);
+  }
+
+  await Promise.all([...urlToImgs.entries()].map(async ([url, imgEls]) => {
+    // Use cached result if available
+    let dataUrl = faviconCache.has(url) ? faviconCache.get(url) : undefined;
+
+    if (dataUrl === undefined) {
+      try {
+        const resp = await chrome.runtime.sendMessage({ type: 'GET_FAVICON', url });
+        dataUrl = resp && resp.dataUrl ? resp.dataUrl : null;
+      } catch {
+        dataUrl = null;
+      }
+      faviconCache.set(url, dataUrl);
+    }
+
+    for (const img of imgEls) {
+      const link = img.closest('.bms-bookmark');
+      if (dataUrl) {
+        img.src = dataUrl;
+        img.style.display = '';
+        link?.classList.remove('bms-no-favicon');
+      }
+      // If null, leave the emoji fallback in place (bms-no-favicon stays)
+    }
+  }));
 }

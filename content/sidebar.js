@@ -24,6 +24,7 @@
   let openTimer = null;
   let closeTimer = null;
   let mutationObserver = null;
+  const faviconCache = new Map(); // persists for the page lifetime
 
   // ── DOM references (populated by injectDOM) ────────────────────────────────
 
@@ -178,6 +179,9 @@
         });
       });
     }
+
+    // Load real favicons asynchronously; emoji fallback shows in the meantime
+    loadFavicons(treeContainer, faviconCache).catch(() => {});
   }
 
   function updateTitle() {
