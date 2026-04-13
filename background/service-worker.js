@@ -1,15 +1,6 @@
 // Background service worker — single source of truth for bookmarks and settings.
 // Content scripts never call chrome.bookmarks directly; they message this worker.
 
-const DEFAULT_SETTINGS = {
-  edge: 'left',
-  hoverDelay: 300,
-  sidebarWidth: 320,
-  openFoldersByDefault: true,
-  showBookmarkCounts: true,
-  closeOnLinkClick: true,
-};
-
 // ── Message handler ──────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -20,12 +11,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true; // keep channel open for async response
   }
 
-  if (message.type === 'GET_SETTINGS') {
-    chrome.storage.sync.get(DEFAULT_SETTINGS).then((settings) => {
-      sendResponse({ settings });
-    });
-    return true;
-  }
 
 });
 

@@ -10,7 +10,7 @@
 
   // ── State ──────────────────────────────────────────────────────────────────
 
-  let settings = {
+  const DEFAULT_SETTINGS = {
     edge: 'left',
     hoverDelay: 300,
     sidebarWidth: 320,
@@ -19,7 +19,9 @@
     closeOnLinkClick: true,
   };
 
+  let settings = { ...DEFAULT_SETTINGS };
   let bookmarkTree = [];
+  let bookmarksLoaded = false; // deferred until first sidebar open
   let isOpen = false;
   let openTimer = null;
   let closeTimer = null;
@@ -30,36 +32,35 @@
   let root, sidebar, triggerStrip, treeContainer, searchInput, titleEl;
 
   // ── Initialization ─────────────────────────────────────────────────────────
+  // On page load: only read settings (direct storage call, no background
+  // message) and inject the trigger strip. Bookmarks are fetched lazily on
+  // first sidebar open.
 
-  function init() {
-    loadSettingsThenBookmarks();
-    listenForMessages();
-  }
-
-  async function loadSettingsThenBookmarks() {
-    // Load settings first so the sidebar is sized/positioned correctly before
-    // the tree renders.
+  async function init() {
     try {
-      const resp = await chrome.runtime.sendMessage({ type: 'GET_SETTINGS' });
-      if (resp && resp.settings) settings = resp.settings;
+      settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
     } catch {
-      // Extension context may be invalidated on reload; ignore.
+      // Extension context invalidated (e.g. during reload) — bail out.
       return;
     }
 
     injectDOM();
     applySettings();
+    listenForMessages();
     watchForDOMWipe();
+  }
 
+  // ── Lazy bookmark loading ──────────────────────────────────────────────────
+
+  async function ensureBookmarksLoaded() {
+    if (bookmarksLoaded) return;
     try {
       const resp = await chrome.runtime.sendMessage({ type: 'GET_BOOKMARKS' });
-      if (resp && resp.tree) {
-        bookmarkTree = resp.tree;
-        renderTree();
-      }
+      if (resp && resp.tree) bookmarkTree = resp.tree;
     } catch {
-      // Silently fail — sidebar will render empty.
+      // Leave bookmarkTree empty; sidebar renders blank.
     }
+    bookmarksLoaded = true;
   }
 
   // ── DOM injection ──────────────────────────────────────────────────────────
@@ -140,23 +141,19 @@
   function applySettings() {
     if (!root) return;
 
-    // Width as CSS variable
     root.style.setProperty('--bms-width', `${settings.sidebarWidth}px`);
 
     const isRight = settings.edge === 'right';
 
-    // Sidebar position
     sidebar.style.left = isRight ? 'auto' : '0';
     sidebar.style.right = isRight ? '0' : 'auto';
     sidebar.style.transform = isRight ? 'translateX(100%)' : 'translateX(-100%)';
-    sidebar.classList.remove('bms-open'); // re-apply closed state for new edge
+    sidebar.classList.remove('bms-open');
 
-    // Box shadow direction
     sidebar.style.boxShadow = isRight
       ? '-4px 0 24px rgba(0,0,0,0.5)'
       : '4px 0 24px rgba(0,0,0,0.5)';
 
-    // Trigger strip position
     triggerStrip.style.left = isRight ? 'auto' : '0';
     triggerStrip.style.right = isRight ? '0' : 'auto';
 
@@ -173,23 +170,22 @@
 
     if (settings.closeOnLinkClick) {
       treeContainer.querySelectorAll('.bms-bookmark').forEach((a) => {
-        a.addEventListener('click', () => {
-          setTimeout(closeSidebar, 50);
-        });
+        a.addEventListener('click', () => setTimeout(closeSidebar, 50));
       });
     }
-
   }
 
   function updateTitle() {
-    if (!titleEl || !bookmarkTree.length) return;
+    if (!titleEl) return;
+    if (!bookmarkTree.length) {
+      titleEl.textContent = 'Bookmarks';
+      return;
+    }
     const roots = bookmarkTree[0] && bookmarkTree[0].children
       ? bookmarkTree[0].children
       : bookmarkTree;
     let total = 0;
-    for (const root of roots) {
-      total += bmsCountBookmarks(root);
-    }
+    for (const r of roots) total += bmsCountBookmarks(r);
     titleEl.textContent = `${total} Bookmark${total !== 1 ? 's' : ''}`;
   }
 
@@ -199,11 +195,15 @@
 
   // ── Sidebar open/close ─────────────────────────────────────────────────────
 
-  function openSidebar() {
+  async function openSidebar() {
     if (isOpen) return;
     isOpen = true;
+
+    // Fetch bookmarks on first open only
+    await ensureBookmarksLoaded();
+    renderTree();
+
     sidebar.classList.add('bms-open');
-    // Neutralise any residual transform so CSS transition takes over cleanly
     sidebar.style.transform = '';
   }
 
@@ -211,11 +211,9 @@
     if (!isOpen) return;
     isOpen = false;
     sidebar.classList.remove('bms-open');
-    // Restore the off-screen transform for the active edge
     const isRight = settings.edge === 'right';
     sidebar.style.transform = isRight ? 'translateX(100%)' : 'translateX(-100%)';
     if (searchInput) searchInput.value = '';
-    renderTree();
   }
 
   // ── Hover logic ────────────────────────────────────────────────────────────
@@ -248,16 +246,17 @@
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === 'BOOKMARKS_UPDATED' && message.payload && message.payload.tree) {
         bookmarkTree = message.payload.tree;
-        renderTree();
+        bookmarksLoaded = true;
+        // Only re-render if the sidebar is currently visible
+        if (isOpen) renderTree();
       }
 
       if (message.type === 'SETTINGS_UPDATED') {
-        chrome.runtime.sendMessage({ type: 'GET_SETTINGS' }).then((resp) => {
-          if (resp && resp.settings) {
-            settings = resp.settings;
-            applySettings();
-            renderTree();
-          }
+        // Read updated settings directly from storage — no background round-trip
+        chrome.storage.sync.get(DEFAULT_SETTINGS).then((s) => {
+          settings = s;
+          applySettings();
+          if (isOpen) renderTree();
         }).catch(() => {});
       }
     });
@@ -270,7 +269,7 @@
       if (!document.getElementById('bms-root')) {
         injectDOM();
         applySettings();
-        if (bookmarkTree.length) renderTree();
+        if (bookmarksLoaded) renderTree();
       }
     });
     mutationObserver.observe(document.body, { childList: true });
