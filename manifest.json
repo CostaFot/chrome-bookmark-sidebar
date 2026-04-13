@@ -6,8 +6,16 @@
 
   "permissions": [
     "bookmarks",
+    "favicon",
     "storage",
     "tabs"
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["_favicon"],
+      "matches": ["<all_urls>"]
+    }
   ],
   "host_permissions": [
     "<all_urls>"
