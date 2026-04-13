@@ -30,32 +30,6 @@
 /* ── Themes ─────────────────────────────────────────────────────────────────── */
 /* Only CSS custom properties are overridden; all other rules use the vars.     */
 
-/* Catppuccin Macchiato */
-#bms-root[data-theme="macchiato"] {
-  --bms-bg:          #24273a;
-  --bms-bg-hover:    #363a4f;
-  --bms-bg-active:   #494d64;
-  --bms-text:        #cad3f5;
-  --bms-text-muted:  #6e738d;
-  --bms-accent:      #8aadf4;
-  --bms-border:      #363a4f;
-  --bms-input-bg:    #1e2030;
-  --bms-shadow:      rgba(0, 0, 0, 0.5);
-}
-
-/* Catppuccin Frappé */
-#bms-root[data-theme="frappe"] {
-  --bms-bg:          #303446;
-  --bms-bg-hover:    #414559;
-  --bms-bg-active:   #51576d;
-  --bms-text:        #c6d0f5;
-  --bms-text-muted:  #737994;
-  --bms-accent:      #8caaee;
-  --bms-border:      #414559;
-  --bms-input-bg:    #292c3c;
-  --bms-shadow:      rgba(0, 0, 0, 0.45);
-}
-
 /* Catppuccin Latte */
 #bms-root[data-theme="latte"] {
   --bms-bg:          #eff1f5;
