@@ -1,0 +1,41 @@
+name: Auto Tag and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute version
+        id: version
+        run: echo "tag=v1.$(git rev-list --count HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build zip
+        run: |
+          zip -r chrome-bookmark-sidebar-${{ steps.version.outputs.tag }}.zip . \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "*.md" \
+            --exclude ".gitignore"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body: |
+            ## Installation
+            1. Download `chrome-bookmark-sidebar-${{ steps.version.outputs.tag }}.zip` below
+            2. Extract the zip
+            3. Go to `chrome://extensions`, enable **Developer mode**
+            4. Click **Load unpacked** and select the extracted folder
+          files: chrome-bookmark-sidebar-${{ steps.version.outputs.tag }}.zip
