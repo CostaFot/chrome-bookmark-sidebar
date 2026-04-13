@@ -205,9 +205,16 @@ async function loadFavicons(container, cache) {
 
     for (const img of imgEls) {
       if (dataUrl) {
+        img.onload = () => {
+          img.style.display = '';
+          img.closest('.bms-bookmark')?.classList.remove('bms-no-favicon');
+        };
+        img.onerror = () => {
+          console.warn('[bms] favicon failed to render:', url);
+          img.style.display = 'none';
+          // leave bms-no-favicon → emoji stays
+        };
         img.src = dataUrl;
-        img.style.display = '';
-        img.closest('.bms-bookmark')?.classList.remove('bms-no-favicon');
       }
       // null → keep emoji fallback
     }
