@@ -94,13 +94,9 @@ function bmsRenderNode(node, query, settings, isTopLevel, doc) {
   favicon.height = 16;
   favicon.loading = 'lazy';
 
-  // The iframe is about:blank — no host-page CSP applies.
-  // _favicon/ + web_accessible_resources lets this work freely.
-  if (chrome.runtime?.id) {
-    favicon.src = chrome.runtime.getURL(
-      `_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`
-    );
-  }
+  // Running inside an extension-page iframe — chrome.runtime works freely.
+  // No web_accessible_resources needed; extension pages access _favicon/ natively.
+  favicon.src = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`;
   favicon.onerror = () => {
     favicon.style.display = 'none';
     a.classList.add('bms-no-favicon');

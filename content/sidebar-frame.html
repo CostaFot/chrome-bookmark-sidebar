@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="sidebar.css">
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+    }
+    #bms-root {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="bms-root">
+    <div id="bms-header">
+      <span id="bms-title">Bookmarks</span>
+      <button id="bms-close" aria-label="Close sidebar">✕</button>
+    </div>
+    <div id="bms-search-wrapper">
+      <span id="bms-search-icon" aria-hidden="true">🔍</span>
+      <input id="bms-search" type="search" placeholder="Search bookmarks…" aria-label="Search bookmarks">
+    </div>
+    <div id="bms-tree-container"></div>
+  </div>
+  <script src="bookmark-tree.js"></script>
+  <script src="sidebar-frame.js"></script>
+</body>
+</html>

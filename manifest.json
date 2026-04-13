@@ -7,13 +7,12 @@
   "permissions": [
     "bookmarks",
     "favicon",
-    "storage",
-    "tabs"
+    "storage"
   ],
 
   "web_accessible_resources": [
     {
-      "resources": ["_favicon", "content/sidebar.css"],
+      "resources": ["content/sidebar-frame.html"],
       "matches": ["<all_urls>"]
     }
   ],
