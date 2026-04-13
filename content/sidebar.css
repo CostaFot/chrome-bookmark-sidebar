@@ -43,32 +43,6 @@
   --bms-shadow:      rgba(0, 0, 0, 0.5);
 }
 
-/* Nord */
-#bms-root[data-theme="nord"] {
-  --bms-bg:          #2e3440;
-  --bms-bg-hover:    #3b4252;
-  --bms-bg-active:   #434c5e;
-  --bms-text:        #d8dee9;
-  --bms-text-muted:  #4c566a;
-  --bms-accent:      #88c0d0;
-  --bms-border:      #3b4252;
-  --bms-input-bg:    #242933;
-  --bms-shadow:      rgba(0, 0, 0, 0.4);
-}
-
-/* Tokyo Night */
-#bms-root[data-theme="tokyo-night"] {
-  --bms-bg:          #1a1b26;
-  --bms-bg-hover:    #24283b;
-  --bms-bg-active:   #292e42;
-  --bms-text:        #c0caf5;
-  --bms-text-muted:  #565f89;
-  --bms-accent:      #7aa2f7;
-  --bms-border:      #292e42;
-  --bms-input-bg:    #16161e;
-  --bms-shadow:      rgba(0, 0, 0, 0.5);
-}
-
 /* Catppuccin Latte */
 #bms-root[data-theme="latte"] {
   --bms-bg:          #eff1f5;
