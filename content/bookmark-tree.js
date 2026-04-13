@@ -1,71 +1,59 @@
 // bookmark-tree.js — recursive bookmark tree renderer.
-// Loaded before sidebar.js; exposes renderBookmarkTree into the shared content
-// script scope (no module system needed).
+// All elements are created with the `doc` parameter (the iframe's document)
+// so they live in the about:blank iframe context, which has no host-page CSP.
+// This means chrome.runtime.getURL('_favicon/...') works freely as img.src.
 
 /**
  * Counts all bookmark URLs (non-folders) under a node, recursively.
- * @param {chrome.bookmarks.BookmarkTreeNode} node
- * @returns {number}
  */
 function bmsCountBookmarks(node) {
-  if (!node.children) return 1; // it's a URL bookmark
+  if (!node.children) return 1;
   let count = 0;
-  for (const child of node.children) {
-    count += bmsCountBookmarks(child);
-  }
+  for (const child of node.children) count += bmsCountBookmarks(child);
   return count;
 }
 
 /**
- * Returns true if the node or any of its descendants match the query.
- * @param {chrome.bookmarks.BookmarkTreeNode} node
- * @param {string} query — lower-cased search string
- * @returns {boolean}
+ * Returns true if the node or any descendant matches the query string.
  */
 function bmsNodeMatches(node, query) {
   if (node.url) {
-    return (
-      (node.title || '').toLowerCase().includes(query) ||
-      node.url.toLowerCase().includes(query)
-    );
+    return (node.title || '').toLowerCase().includes(query) ||
+           node.url.toLowerCase().includes(query);
   }
-  if (!node.children) return false;
-  return node.children.some((child) => bmsNodeMatches(child, query));
+  return node.children?.some((c) => bmsNodeMatches(c, query)) ?? false;
 }
 
 /**
  * Renders a single BookmarkTreeNode as a DOM element.
- * Returns the element, or null if it should be filtered out by the query.
  * @param {chrome.bookmarks.BookmarkTreeNode} node
- * @param {string} query — lower-cased search string ('' means no filter)
+ * @param {string} query — lower-cased search string
  * @param {object} settings
  * @param {boolean} isTopLevel
+ * @param {Document} doc — the iframe's document (no host-page CSP)
  * @returns {HTMLElement|null}
  */
-function bmsRenderNode(node, query, settings, isTopLevel) {
+function bmsRenderNode(node, query, settings, isTopLevel, doc) {
   if (query && !bmsNodeMatches(node, query)) return null;
 
   // ── Folder ───────────────────────────────────────────────────────────────
   if (!node.url) {
-    const details = document.createElement('details');
+    const details = doc.createElement('details');
     details.className = 'bms-folder';
+    if (isTopLevel || query || settings.openFoldersByDefault) details.open = true;
 
-    // Force open when: top-level, searching, or openFoldersByDefault
-    const shouldOpen = isTopLevel || query || settings.openFoldersByDefault;
-    if (shouldOpen) details.open = true;
+    const summary = doc.createElement('summary');
 
-    const summary = document.createElement('summary');
-
-    const arrow = document.createElement('span');
+    const arrow = doc.createElement('span');
     arrow.className = 'bms-folder-icon';
     arrow.setAttribute('aria-hidden', 'true');
 
-    const folderIcon = document.createElement('span');
+    const folderIcon = doc.createElement('span');
     folderIcon.className = 'bms-folder-emoji';
     folderIcon.setAttribute('aria-hidden', 'true');
     folderIcon.textContent = '📁';
 
-    const name = document.createElement('span');
+    const name = doc.createElement('span');
     name.className = 'bms-folder-name';
     name.textContent = node.title || 'Bookmarks';
 
@@ -74,55 +62,51 @@ function bmsRenderNode(node, query, settings, isTopLevel) {
     summary.appendChild(name);
 
     if (settings.showBookmarkCounts && node.children) {
-      const count = bmsCountBookmarks(node);
-      const badge = document.createElement('span');
+      const badge = doc.createElement('span');
       badge.className = 'bms-folder-count';
-      badge.textContent = count;
+      badge.textContent = bmsCountBookmarks(node);
       summary.appendChild(badge);
     }
 
     details.appendChild(summary);
 
-    const childrenContainer = document.createElement('div');
-    childrenContainer.className = 'bms-folder-children';
-
-    if (node.children) {
-      for (const child of node.children) {
-        const childEl = bmsRenderNode(child, query, settings, false);
-        if (childEl) childrenContainer.appendChild(childEl);
-      }
+    const children = doc.createElement('div');
+    children.className = 'bms-folder-children';
+    for (const child of (node.children || [])) {
+      const el = bmsRenderNode(child, query, settings, false, doc);
+      if (el) children.appendChild(el);
     }
-
-    details.appendChild(childrenContainer);
+    details.appendChild(children);
     return details;
   }
 
   // ── Bookmark link ────────────────────────────────────────────────────────
-  const a = document.createElement('a');
+  const a = doc.createElement('a');
   a.className = 'bms-bookmark';
   a.href = node.url;
   a.title = node.title || node.url;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
 
-  const favicon = document.createElement('img');
+  const favicon = doc.createElement('img');
   favicon.className = 'bms-favicon';
   favicon.width = 16;
   favicon.height = 16;
   favicon.loading = 'lazy';
-  favicon.style.display = 'none'; // shown by loadFavicons() once data URI arrives
 
-  try {
-    const { protocol, hostname } = new URL(node.url);
-    if (protocol === 'http:' || protocol === 'https:') {
-      favicon.dataset.faviconUrl = `${protocol}//${hostname}/favicon.ico`;
-    }
-  } catch { /* malformed URL — leave without favicon */ }
+  // The iframe is about:blank — no host-page CSP applies.
+  // _favicon/ + web_accessible_resources lets this work freely.
+  if (chrome.runtime?.id) {
+    favicon.src = chrome.runtime.getURL(
+      `_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`
+    );
+  }
+  favicon.onerror = () => {
+    favicon.style.display = 'none';
+    a.classList.add('bms-no-favicon');
+  };
 
-  // Emoji fallback visible until the real favicon loads
-  a.classList.add('bms-no-favicon');
-
-  const title = document.createElement('span');
+  const title = doc.createElement('span');
   title.className = 'bms-bookmark-title';
   title.textContent = node.title || node.url;
 
@@ -133,90 +117,26 @@ function bmsRenderNode(node, query, settings, isTopLevel) {
 
 /**
  * Renders the full bookmark tree into containerEl.
- * @param {chrome.bookmarks.BookmarkTreeNode[]} tree — result of chrome.bookmarks.getTree()
+ * @param {chrome.bookmarks.BookmarkTreeNode[]} tree
  * @param {HTMLElement} containerEl
- * @param {string} query — search query string ('' means show all)
+ * @param {string} query
  * @param {object} settings
+ * @param {Document} doc — the iframe's document
  */
-function renderBookmarkTree(tree, containerEl, query, settings) {
+function renderBookmarkTree(tree, containerEl, query, settings, doc) {
   containerEl.innerHTML = '';
   const q = (query || '').trim().toLowerCase();
+  const roots = tree[0]?.children ?? tree;
 
-  // Chrome's getTree() returns a single synthetic root node (id "0").
-  // Its children are the real top-level folders: Bookmarks Bar, Other Bookmarks, etc.
-  const roots = (tree[0] && tree[0].children) ? tree[0].children : tree;
-
-  if (q) {
-    // Search mode: show a flat search-results style with folder context
-    for (const root of roots) {
-      const el = bmsRenderNode(root, q, settings, true);
-      if (el) containerEl.appendChild(el);
-    }
-
-    if (containerEl.children.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'bms-empty';
-      empty.textContent = 'No bookmarks match your search.';
-      containerEl.appendChild(empty);
-    }
-  } else {
-    // Normal mode: render each top-level folder
-    for (const root of roots) {
-      const el = bmsRenderNode(root, '', settings, true);
-      if (el) containerEl.appendChild(el);
-    }
-  }
-}
-
-/**
- * Fetches favicons via the background service worker (which has host_permissions
- * and is not subject to the host page's CSP) and applies them as data URIs.
- * Deduplicated by domain and cached across re-renders.
- *
- * @param {HTMLElement} container
- * @param {Map<string, string|null>} cache  — persists for the page's lifetime
- */
-async function loadFavicons(container, cache) {
-  if (!chrome.runtime?.id) return; // stale context after extension reload
-
-  const imgs = Array.from(container.querySelectorAll('img.bms-favicon[data-favicon-url]'));
-  if (!imgs.length) return;
-
-  // Group img elements by favicon URL so each domain is only fetched once
-  const byUrl = new Map();
-  for (const img of imgs) {
-    const u = img.dataset.faviconUrl;
-    if (!byUrl.has(u)) byUrl.set(u, []);
-    byUrl.get(u).push(img);
+  for (const root of roots) {
+    const el = bmsRenderNode(root, q, settings, true, doc);
+    if (el) containerEl.appendChild(el);
   }
 
-  await Promise.all([...byUrl.entries()].map(async ([url, imgEls]) => {
-    let dataUrl;
-    if (cache.has(url)) {
-      dataUrl = cache.get(url);
-    } else {
-      try {
-        dataUrl = await chrome.runtime.sendMessage({ type: 'GET_FAVICON', url });
-      } catch {
-        dataUrl = null;
-      }
-      cache.set(url, dataUrl);
-    }
-
-    for (const img of imgEls) {
-      if (dataUrl) {
-        img.onload = () => {
-          img.style.display = '';
-          img.closest('.bms-bookmark')?.classList.remove('bms-no-favicon');
-        };
-        img.onerror = () => {
-          console.warn('[bms] favicon failed to render:', url);
-          img.style.display = 'none';
-          // leave bms-no-favicon → emoji stays
-        };
-        img.src = dataUrl;
-      }
-      // null → keep emoji fallback
-    }
-  }));
+  if (q && containerEl.children.length === 0) {
+    const empty = doc.createElement('div');
+    empty.className = 'bms-empty';
+    empty.textContent = 'No bookmarks match your search.';
+    containerEl.appendChild(empty);
+  }
 }
