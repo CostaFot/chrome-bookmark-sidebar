@@ -110,24 +110,17 @@ function bmsRenderNode(node, query, settings, isTopLevel) {
   favicon.width = 16;
   favicon.height = 16;
   favicon.loading = 'lazy';
+  favicon.style.display = 'none'; // shown by loadFavicons() once data URI arrives
 
-  // The "favicon" permission + "_favicon" in web_accessible_resources lets
-  // us use Chrome's internal favicon cache directly as an img src, even from
-  // a content script. No background fetch or data URI needed.
-  //
-  // Guard: if the extension was reloaded while this tab was already open,
-  // chrome.runtime.id is undefined and getURL() returns "chrome-extension://invalid/".
-  // Check the id first so we fall back to the emoji cleanly.
-  if (chrome.runtime?.id) {
-    favicon.src = chrome.runtime.getURL(`_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`);
-  } else {
-    favicon.style.display = 'none';
-    a.classList.add('bms-no-favicon');
-  }
-  favicon.onerror = () => {
-    favicon.style.display = 'none';
-    a.classList.add('bms-no-favicon');
-  };
+  try {
+    const { protocol, hostname } = new URL(node.url);
+    if (protocol === 'http:' || protocol === 'https:') {
+      favicon.dataset.faviconUrl = `${protocol}//${hostname}/favicon.ico`;
+    }
+  } catch { /* malformed URL — leave without favicon */ }
+
+  // Emoji fallback visible until the real favicon loads
+  a.classList.add('bms-no-favicon');
 
   const title = document.createElement('span');
   title.className = 'bms-bookmark-title';
@@ -175,3 +168,48 @@ function renderBookmarkTree(tree, containerEl, query, settings) {
   }
 }
 
+/**
+ * Fetches favicons via the background service worker (which has host_permissions
+ * and is not subject to the host page's CSP) and applies them as data URIs.
+ * Deduplicated by domain and cached across re-renders.
+ *
+ * @param {HTMLElement} container
+ * @param {Map<string, string|null>} cache  — persists for the page's lifetime
+ */
+async function loadFavicons(container, cache) {
+  if (!chrome.runtime?.id) return; // stale context after extension reload
+
+  const imgs = Array.from(container.querySelectorAll('img.bms-favicon[data-favicon-url]'));
+  if (!imgs.length) return;
+
+  // Group img elements by favicon URL so each domain is only fetched once
+  const byUrl = new Map();
+  for (const img of imgs) {
+    const u = img.dataset.faviconUrl;
+    if (!byUrl.has(u)) byUrl.set(u, []);
+    byUrl.get(u).push(img);
+  }
+
+  await Promise.all([...byUrl.entries()].map(async ([url, imgEls]) => {
+    let dataUrl;
+    if (cache.has(url)) {
+      dataUrl = cache.get(url);
+    } else {
+      try {
+        dataUrl = await chrome.runtime.sendMessage({ type: 'GET_FAVICON', url });
+      } catch {
+        dataUrl = null;
+      }
+      cache.set(url, dataUrl);
+    }
+
+    for (const img of imgEls) {
+      if (dataUrl) {
+        img.src = dataUrl;
+        img.style.display = '';
+        img.closest('.bms-bookmark')?.classList.remove('bms-no-favicon');
+      }
+      // null → keep emoji fallback
+    }
+  }));
+}

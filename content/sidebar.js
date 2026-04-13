@@ -22,6 +22,7 @@
   let settings = { ...DEFAULT_SETTINGS };
   let bookmarkTree = [];
   let bookmarksLoaded = false; // deferred until first sidebar open
+  const faviconCache = new Map();
   let isOpen = false;
   let openTimer = null;
   let closeTimer = null;
@@ -174,6 +175,7 @@
       });
     }
 
+    loadFavicons(treeContainer, faviconCache).catch(() => {});
   }
 
   function updateTitle() {

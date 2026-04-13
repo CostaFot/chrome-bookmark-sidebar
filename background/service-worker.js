@@ -11,7 +11,32 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true; // keep channel open for async response
   }
 
+  if (message.type === 'GET_FAVICON') {
+    fetchFaviconAsDataUrl(message.url).then(sendResponse);
+    return true;
+  }
 });
+
+// Fetches a favicon URL and returns it as a base64 data URI.
+// Running in the service worker means:
+//   • host_permissions bypass CORS — we can read any domain's response
+//   • not subject to the host page's CSP — safe on Twitter, GitHub, etc.
+async function fetchFaviconAsDataUrl(url) {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    if (!buf.byteLength) return null;
+    const mime = res.headers.get('content-type') || 'image/x-icon';
+    // btoa via Uint8Array — no FileReader needed in service workers
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return `data:${mime};base64,${btoa(binary)}`;
+  } catch {
+    return null;
+  }
+}
 
 // ── Bookmark change listeners ────────────────────────────────────────────────
 
