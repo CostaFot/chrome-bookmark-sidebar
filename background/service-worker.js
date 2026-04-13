@@ -27,7 +27,8 @@ async function fetchFaviconAsDataUrl(url) {
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     if (!buf.byteLength) return null;
-    const mime = res.headers.get('content-type') || 'image/x-icon';
+    // Strip params like "; charset=utf-8" — data URIs only accept a bare MIME type
+    const mime = (res.headers.get('content-type') || 'image/x-icon').split(';')[0].trim();
     // btoa via Uint8Array — no FileReader needed in service workers
     const bytes = new Uint8Array(buf);
     let binary = '';
