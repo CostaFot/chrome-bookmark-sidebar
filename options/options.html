@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bookmark Sidebar — Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔖 Bookmark Sidebar</h1>
+      <p class="subtitle">Settings</p>
+    </header>
+
+    <form id="settings-form">
+
+      <section>
+        <h2>Trigger</h2>
+
+        <div class="field">
+          <label>Screen edge</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="edge" value="left" />
+              <span>Left</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="edge" value="right" />
+              <span>Right</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hoverDelay">Hover delay</label>
+          <div class="input-with-unit">
+            <input type="number" id="hoverDelay" name="hoverDelay" min="0" max="2000" step="50" />
+            <span class="unit">ms</span>
+          </div>
+          <p class="hint">How long to hover on the edge before the sidebar opens.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Appearance</h2>
+
+        <div class="field">
+          <label for="sidebarWidth">Sidebar width</label>
+          <div class="input-with-unit">
+            <input type="number" id="sidebarWidth" name="sidebarWidth" min="150" max="800" step="10" />
+            <span class="unit">px</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Behavior</h2>
+
+        <div class="field field-checkbox">
+          <input type="checkbox" id="openFoldersByDefault" name="openFoldersByDefault" />
+          <label for="openFoldersByDefault">Open folders by default</label>
+        </div>
+
+        <div class="field field-checkbox">
+          <input type="checkbox" id="showBookmarkCounts" name="showBookmarkCounts" />
+          <label for="showBookmarkCounts">Show bookmark counts on folders</label>
+        </div>
+
+        <div class="field field-checkbox">
+          <input type="checkbox" id="closeOnLinkClick" name="closeOnLinkClick" />
+          <label for="closeOnLinkClick">Close sidebar when a bookmark is opened</label>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="submit" id="save-btn" class="btn-primary">Save Settings</button>
+        <button type="button" id="reset-btn" class="btn-secondary">Reset to Defaults</button>
+      </div>
+
+      <p id="status-msg" class="status-msg" aria-live="polite"></p>
+    </form>
+
+    <footer>
+      <p>Local-first &mdash; no data leaves your browser.</p>
+    </footer>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
