@@ -172,6 +172,24 @@ input[type="number"]:focus {
   font-size: 12px;
 }
 
+select {
+  background: var(--bg-input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 150ms;
+  appearance: auto;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* ── Actions ────────────────────────────────────────────────────────────────── */
 
 .actions {
