@@ -100,13 +100,22 @@
     iframeDoc.close();
 
     // Inject CSS from the extension (web_accessible_resources makes this available)
-    const link = iframeDoc.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = chrome.runtime.getURL('content/sidebar.css');
-    iframeDoc.head.appendChild(link);
+    // Guard: chrome.runtime.id is falsy when the extension context is invalidated
+    if (chrome.runtime?.id) {
+      const link = iframeDoc.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = chrome.runtime.getURL('content/sidebar.css');
+      iframeDoc.head.appendChild(link);
+    }
 
     // Body resets for iframe context
-    iframeDoc.body.style.cssText = 'margin:0;padding:0;overflow:hidden;height:100vh;display:flex;flex-direction:column;';
+    iframeDoc.body.style.cssText = 'margin:0;padding:0;overflow:hidden;height:100vh;';
+
+    // Root wrapper — CSS is scoped under #bms-root so this must exist in the iframe
+    const iframeRoot = iframeDoc.createElement('div');
+    iframeRoot.id = 'bms-root';
+    iframeRoot.style.cssText = 'height:100%;display:flex;flex-direction:column;overflow:hidden;';
+    iframeDoc.body.appendChild(iframeRoot);
 
     // ── Header ─────────────────────────────────────────────────────────────
     const header = iframeDoc.createElement('div');
@@ -148,9 +157,9 @@
     treeContainer = iframeDoc.createElement('div');
     treeContainer.id = 'bms-tree-container';
 
-    iframeDoc.body.appendChild(header);
-    iframeDoc.body.appendChild(searchWrapper);
-    iframeDoc.body.appendChild(treeContainer);
+    iframeRoot.appendChild(header);
+    iframeRoot.appendChild(searchWrapper);
+    iframeRoot.appendChild(treeContainer);
 
     // Mouse events — listened on the iframe element from the parent page
     triggerStrip.addEventListener('mouseenter', onStripEnter);
