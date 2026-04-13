@@ -30,6 +30,103 @@
 /* ── Themes ─────────────────────────────────────────────────────────────────── */
 /* Only CSS custom properties are overridden; all other rules use the vars.     */
 
+/* ── Girly / Soft ────────────────────────────────────────────────────────────── */
+
+/* Rose Quartz — dusty rose bg, mauve text, blush accents */
+#bms-root[data-theme="rose-quartz"] {
+  --bms-bg:          #f2d7da;
+  --bms-bg-hover:    #e8c3c8;
+  --bms-bg-active:   #d4a5ab;
+  --bms-text:        #4a2830;
+  --bms-text-muted:  #9a7075;
+  --bms-accent:      #c06470;
+  --bms-border:      #dbb8bc;
+  --bms-input-bg:    #fae8ea;
+  --bms-shadow:      rgba(120, 60, 70, 0.2);
+}
+
+/* Sakura — cream/pink bg, cherry blossom accents */
+#bms-root[data-theme="sakura"] {
+  --bms-bg:          #fef0f3;
+  --bms-bg-hover:    #fbd8e0;
+  --bms-bg-active:   #f5b8c4;
+  --bms-text:        #3c2228;
+  --bms-text-muted:  #a87880;
+  --bms-accent:      #e8607a;
+  --bms-border:      #f5ccd4;
+  --bms-input-bg:    #fff8fa;
+  --bms-shadow:      rgba(180, 80, 100, 0.15);
+}
+
+/* Barbie — hot pink bg, bold magenta, yellow accent */
+#bms-root[data-theme="barbie"] {
+  --bms-bg:          #ff4da6;
+  --bms-bg-hover:    #ff1a90;
+  --bms-bg-active:   #e6007a;
+  --bms-text:        #ffffff;
+  --bms-text-muted:  rgba(255, 255, 255, 0.65);
+  --bms-accent:      #ffe600;
+  --bms-border:      rgba(255, 255, 255, 0.28);
+  --bms-input-bg:    #cc0073;
+  --bms-shadow:      rgba(200, 0, 100, 0.45);
+}
+
+/* Bubblegum — pastel pink bg, lilac accents */
+#bms-root[data-theme="bubblegum"] {
+  --bms-bg:          #fce8f0;
+  --bms-bg-hover:    #f8d0e4;
+  --bms-bg-active:   #f0aed0;
+  --bms-text:        #4a1848;
+  --bms-text-muted:  #9c6890;
+  --bms-accent:      #b040c0;
+  --bms-border:      #f0c8dc;
+  --bms-input-bg:    #fff0f8;
+  --bms-shadow:      rgba(140, 60, 140, 0.2);
+}
+
+/* ── Space / Cosmic ──────────────────────────────────────────────────────────── */
+
+/* Nebula — near-black, electric purple + magenta */
+#bms-root[data-theme="nebula"] {
+  --bms-bg:          #0a0015;
+  --bms-bg-hover:    #15002a;
+  --bms-bg-active:   #220044;
+  --bms-text:        #dcc8ff;
+  --bms-text-muted:  #7850a0;
+  --bms-accent:      #cc40ff;
+  --bms-border:      #220044;
+  --bms-input-bg:    #060008;
+  --bms-shadow:      rgba(140, 0, 220, 0.4);
+}
+
+/* Aurora — dark bg, teal + violet northern lights */
+#bms-root[data-theme="aurora"] {
+  --bms-bg:          #090f14;
+  --bms-bg-hover:    #121e28;
+  --bms-bg-active:   #1a2e3c;
+  --bms-text:        #c0e8e0;
+  --bms-text-muted:  #406858;
+  --bms-accent:      #30d8b0;
+  --bms-border:      #1a2e3c;
+  --bms-input-bg:    #050a0e;
+  --bms-shadow:      rgba(0, 180, 140, 0.3);
+}
+
+/* Synthwave — dark navy/purple, hot pink + neon */
+#bms-root[data-theme="synthwave"] {
+  --bms-bg:          #0f0525;
+  --bms-bg-hover:    #1e0a44;
+  --bms-bg-active:   #2d1060;
+  --bms-text:        #ece0ff;
+  --bms-text-muted:  #7055a8;
+  --bms-accent:      #ff2da0;
+  --bms-border:      #2d1060;
+  --bms-input-bg:    #080315;
+  --bms-shadow:      rgba(180, 0, 130, 0.5);
+}
+
+/* ── Classic Dark ────────────────────────────────────────────────────────────── */
+
 /* Dracula */
 #bms-root[data-theme="dracula"] {
   --bms-bg:          #282a36;
