@@ -19,6 +19,12 @@
   --bms-input-bg:    #181825;
   --bms-shadow:      rgba(0, 0, 0, 0.55);
   --bms-width:       320px;
+
+  /* Fill the iframe — without this the frame is transparent */
+  background: var(--bms-bg);
+  color: var(--bms-text);
+  height: 100%;
+  overflow: hidden;
 }
 
 #bms-root *,
@@ -42,27 +48,13 @@
   cursor: default;
 }
 
-/* ── Sidebar panel ──────────────────────────────────────────────────────────── */
+/* ── Sidebar iframe (positioned by sidebar.js inline styles) ────────────────── */
 
-#bms-sidebar {
+#bms-sidebar-frame {
   position: fixed;
   top: 0;
   left: 0;
-  width: var(--bms-width);
-  height: 100vh;
-  z-index: 2147483645;
-  background: var(--bms-bg);
-  color: var(--bms-text);
-  box-shadow: 4px 0 24px var(--bms-shadow);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: transform 200ms ease-in-out;
-  /* Initial off-screen state set by sidebar.js via inline style */
-}
-
-#bms-sidebar.bms-open {
-  transform: translateX(0) !important;
+  border: none;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────────── */
