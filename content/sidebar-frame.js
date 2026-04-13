@@ -8,6 +8,7 @@
     openFoldersByDefault: true,
     showBookmarkCounts: true,
     closeOnLinkClick: true,
+    theme: 'mocha',
   };
 
   let settings = { ...DEFAULT_SETTINGS };
@@ -25,7 +26,16 @@
     bookmarkTree = await chrome.bookmarks.getTree();
   } catch { /* stay with defaults */ }
 
+  applyTheme();
   renderTree();
+
+  // ── Theme ───────────────────────────────────────────────────────────────────
+
+  function applyTheme() {
+    const root = document.getElementById('bms-root');
+    if (!root) return;
+    root.dataset.theme = settings.theme || 'mocha';
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -94,6 +104,7 @@
     if (area !== 'sync') return;
     chrome.storage.sync.get(DEFAULT_SETTINGS).then((s) => {
       settings = s;
+      applyTheme();
       renderTree();
     }).catch(() => {});
   });

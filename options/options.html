@@ -46,6 +46,34 @@
         <h2>Appearance</h2>
 
         <div class="field">
+          <label for="theme">Theme</label>
+          <select id="theme" name="theme">
+            <optgroup label="Catppuccin">
+              <option value="mocha">Mocha (default)</option>
+              <option value="latte">Latte</option>
+            </optgroup>
+            <optgroup label="Girly">
+              <option value="rose-quartz">Rose Quartz</option>
+              <option value="sakura">Sakura</option>
+              <option value="barbie">Barbie</option>
+              <option value="bubblegum">Bubblegum</option>
+            </optgroup>
+            <optgroup label="Space">
+              <option value="nebula">Nebula</option>
+              <option value="aurora">Aurora</option>
+              <option value="synthwave">Synthwave</option>
+            </optgroup>
+            <optgroup label="Classic">
+              <option value="dracula">Dracula</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="light">Light</option>
+              <option value="auto">Auto (follows OS)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
           <label for="sidebarWidth">Sidebar width</label>
           <div class="input-with-unit">
             <input type="number" id="sidebarWidth" name="sidebarWidth" min="150" max="800" step="10" />

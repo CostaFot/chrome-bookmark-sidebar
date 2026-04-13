@@ -7,6 +7,7 @@ const DEFAULTS = {
   openFoldersByDefault: true,
   showBookmarkCounts: true,
   closeOnLinkClick: true,
+  theme: 'mocha',
 };
 
 const form = document.getElementById('settings-form');
@@ -33,6 +34,7 @@ function populateForm(settings) {
     radio.checked = radio.value === settings.edge;
   });
 
+  form.theme.value = settings.theme;
   form.hoverDelay.value = settings.hoverDelay;
   form.sidebarWidth.value = settings.sidebarWidth;
   form.openFoldersByDefault.checked = settings.openFoldersByDefault;
@@ -44,6 +46,7 @@ function readForm() {
   const edgeRadio = form.querySelector('input[name="edge"]:checked');
   return {
     edge: edgeRadio ? edgeRadio.value : 'left',
+    theme: form.theme.value || 'mocha',
     hoverDelay: Math.max(0, Math.min(2000, parseInt(form.hoverDelay.value, 10) || 0)),
     sidebarWidth: Math.max(150, Math.min(800, parseInt(form.sidebarWidth.value, 10) || 320)),
     openFoldersByDefault: form.openFoldersByDefault.checked,
