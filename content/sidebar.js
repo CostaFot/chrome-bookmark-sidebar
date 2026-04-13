@@ -22,6 +22,7 @@
   let settings = { ...DEFAULT_SETTINGS };
   let bookmarkTree = [];
   let bookmarksLoaded = false; // deferred until first sidebar open
+  const faviconCache = new Map(); // persists for the page's lifetime
   let isOpen = false;
   let openTimer = null;
   let closeTimer = null;
@@ -173,6 +174,9 @@
         a.addEventListener('click', () => setTimeout(closeSidebar, 50));
       });
     }
+
+    // Load favicons via background (bypasses page CSP). Emoji shows until ready.
+    loadFavicons(treeContainer, faviconCache).catch(() => {});
   }
 
   function updateTitle() {
