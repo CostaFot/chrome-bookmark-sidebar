@@ -114,11 +114,13 @@ function bmsRenderNode(node, query, settings, isTopLevel) {
   // The "favicon" permission + "_favicon" in web_accessible_resources lets
   // us use Chrome's internal favicon cache directly as an img src, even from
   // a content script. No background fetch or data URI needed.
-  // Wrapped in try/catch: chrome.runtime.getURL() throws "Extension context
-  // invalidated" if the extension was reloaded while this tab was already open.
-  try {
+  //
+  // Guard: if the extension was reloaded while this tab was already open,
+  // chrome.runtime.id is undefined and getURL() returns "chrome-extension://invalid/".
+  // Check the id first so we fall back to the emoji cleanly.
+  if (chrome.runtime?.id) {
     favicon.src = chrome.runtime.getURL(`_favicon/?pageUrl=${encodeURIComponent(node.url)}&size=16`);
-  } catch {
+  } else {
     favicon.style.display = 'none';
     a.classList.add('bms-no-favicon');
   }
